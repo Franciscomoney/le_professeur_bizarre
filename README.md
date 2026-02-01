@@ -1,8 +1,8 @@
 # Le Professeur Bizarre 🇫🇷🤖🇺🇸
 
-> Real-time French conversation with an expressive robot teacher
+> Real-time French conversation with an expressive robot teacher that can SEE!
 
-**Le Professeur Bizarre** transforms your Reachy Mini into an eccentric French language teacher with real-time voice conversation, expressive animations, and rich behaviors.
+**Le Professeur Bizarre** transforms your Reachy Mini into an eccentric French language teacher with real-time voice conversation, computer vision, expressive animations, and rich behaviors.
 
 ## Features
 
@@ -10,7 +10,14 @@
 - **OpenAI Realtime API** for natural back-and-forth voice chat
 - **Live transcription** of both user and AI speech
 - **Echo cancellation** - mutes input while AI speaks
+- **Separate transcript boxes** - See your speech and Reachy's responses clearly
 - Speak English, learn French naturally!
+
+### 👁️ Computer Vision (NEW!)
+- **NVIDIA Nemotron VL** for object recognition
+- **Show objects to the camera** - Reachy will teach you the French word!
+- **Real-time webcam feed** with targeting crosshair
+- Just say "What is this?" or "Look at this" while holding an object
 
 ### 🤖 Expressive Robot Behaviors
 - **Breathing animation** - Subtle idle movement when not speaking
@@ -24,6 +31,7 @@ The AI naturally triggers robot behaviors during conversation:
 - Waves when greeting
 - Shows excitement when you learn something
 - Does a celebration dance when you nail a phrase
+- Shows "thinking" emotion while analyzing images
 - Expresses confusion at American customs
 
 ### 📺 Live Visualization
@@ -48,6 +56,7 @@ reachy-mini-daemon
 ### 2. Set Environment Variables
 ```bash
 export OPENAI_API_KEY="sk-your-openai-key"
+export OPENROUTER_API_KEY="sk-or-your-openrouter-key"  # For vision
 export REACHY_DAEMON_URL="http://localhost:8000"  # optional
 ```
 
@@ -73,6 +82,12 @@ Try saying:
 - "Do a little dance for me!"
 - "How do French people greet each other?"
 
+### Vision Examples
+Enable the camera and try:
+- Hold up an apple: "What is this?"
+- Show your coffee mug: "Look at this!"
+- Point to any object: "Can you see what I'm holding?"
+
 ## API Endpoints
 
 ### Behaviors
@@ -92,6 +107,12 @@ POST /api/behavior/dance_french_waltz
 GET /api/status
 ```
 
+### Vision
+```
+POST /api/camera/frame    - Receive camera frame from browser
+POST /api/vision/analyze  - Analyze image and get French teaching
+```
+
 ### WebSockets
 ```
 WS /ws/realtime      - Voice conversation relay
@@ -101,10 +122,14 @@ WS /ws/reachy-state  - Robot state streaming (20 FPS)
 ## Architecture
 
 ```
-Browser <--WebSocket--> FastAPI Server <--WebSocket--> OpenAI Realtime API
-                              |
-                              v
-                        Reachy Daemon
+                              OpenAI Realtime API
+                                     ^
+                                     | WebSocket (voice)
+                                     |
+Browser <--WebSocket--> FastAPI Server --HTTP--> OpenRouter (Nemotron VL)
+   |                          |                        (vision)
+   | Camera frames            v
+   +--------------------> Reachy Daemon
                               |
                               v
                       Reachy Mini Robot
@@ -120,7 +145,8 @@ Browser <--WebSocket--> FastAPI Server <--WebSocket--> OpenAI Realtime API
 
 ```
 le_professeur_bizarre/
-├── realtime_app.py      # Main server with OpenAI Realtime
+├── realtime_app.py      # Main server with OpenAI Realtime + Vision
+├── vision.py            # NVIDIA Nemotron VL vision module
 ├── behaviors.py         # Robot animation system
 ├── integrated_server.py # Legacy translation-only mode
 ├── lessons.py           # Structured French lessons
@@ -132,17 +158,18 @@ le_professeur_bizarre/
 
 - **Robot**: [Reachy Mini](https://www.pollen-robotics.com/reachy-mini/) by Pollen Robotics
 - **Voice AI**: [OpenAI Realtime API](https://platform.openai.com/docs/guides/realtime)
+- **Vision AI**: [NVIDIA Nemotron VL](https://openrouter.ai/nvidia/nemotron-nano-12b-v2-vl) via OpenRouter
 - **Backend**: FastAPI + WebSockets
-- **Frontend**: Vanilla JS + Web Audio API
+- **Frontend**: Vanilla JS + Web Audio API + WebRTC (camera)
 - **Simulation**: MuJoCo physics (via reachy-mini-daemon)
 
 ## Configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `OPENAI_API_KEY` | required | OpenAI API key for Realtime |
+| `OPENAI_API_KEY` | required | OpenAI API key for Realtime voice |
+| `OPENROUTER_API_KEY` | required | OpenRouter key for vision (Nemotron VL) |
 | `REACHY_DAEMON_URL` | `http://localhost:8000` | Reachy daemon address |
-| `OPENROUTER_API_KEY` | optional | For legacy translation mode |
 
 ## Legacy Mode
 

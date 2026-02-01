@@ -18,8 +18,10 @@ from pydantic import BaseModel
 
 try:
     from .behaviors import ReachyBehaviors, Emotion, Dance
+    from .vision import analyze_image, describe_for_teaching, VisionResponse
 except ImportError:
     from behaviors import ReachyBehaviors, Emotion, Dance
+    from vision import analyze_image, describe_for_teaching, VisionResponse
 
 
 # ==================== CONFIGURATION ====================
@@ -29,7 +31,7 @@ REACHY_DAEMON_URL = os.getenv("REACHY_DAEMON_URL", "http://localhost:8000")
 OPENAI_REALTIME_URL = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17"
 
 # Le Professeur Bizarre System Prompt
-SYSTEM_PROMPT = """You are Le Professeur Bizarre, a friendly robot language teacher. You teach French to English speakers.
+SYSTEM_PROMPT = """You are Le Professeur Bizarre, a friendly robot language teacher with VISION. You teach French to English speakers.
 
 IMPORTANT RULES:
 1. Keep responses SHORT (1-3 sentences max for voice conversation)
@@ -49,11 +51,20 @@ Your abilities (use sparingly and naturally):
 - wave: for greetings
 - nod: to confirm
 - shake: to gently correct
+- look_at_camera: SEE what the user is showing you! Use this when they say "look", "what is this", "can you see", etc.
 
-CRITICAL: Your FIRST message when someone connects should ONLY be a short greeting like:
-"Bonjour! I'm Reachy, your French language buddy. What would you like to learn today?"
+VISION: You can SEE through the camera! When users show you objects:
+1. Use look_at_camera tool to see what they're showing
+2. Tell them the French word for it
+3. Give pronunciation
+4. Share a cultural fact
 
-Then WAIT for the user to respond. Do NOT keep talking without input."""
+Example: User says "What's this?" -> Use look_at_camera -> "Ah! Une pomme! That's 'ewn POM'. In France, we have over 400 apple varieties!"
+
+CRITICAL: Your FIRST message should ONLY be:
+"Bonjour! I'm Reachy, your French teacher. I can see through my camera - show me objects and I'll teach you the French words! What would you like to learn?"
+
+Then WAIT for the user to respond."""
 
 
 # ==================== GLOBAL STATE ====================
@@ -142,6 +153,23 @@ async def handle_tool_call(tool_name: str, arguments: dict) -> str:
         await behaviors.stop_dance()
         return "Stopped dancing"
 
+    elif tool_name == "look_at_camera":
+        # Show thinking emotion while analyzing
+        await behaviors.play_emotion(Emotion.THINKING)
+
+        question = arguments.get("question", "What object is this? Tell me the French word.")
+
+        # Check if we have a recent camera frame
+        import time
+        if latest_camera_frame["frame"] and (time.time() - latest_camera_frame["timestamp"]) < 10:
+            # Analyze the frame
+            result = await describe_for_teaching(latest_camera_frame["frame"])
+            await behaviors.play_emotion(Emotion.EXCITED)
+            return result
+        else:
+            await behaviors.play_emotion(Emotion.CONFUSED)
+            return "I can't see anything right now. Make sure the camera is enabled and show me something!"
+
     return f"Unknown tool: {tool_name}"
 
 
@@ -193,8 +221,25 @@ TOOLS = [
         "type": "function",
         "name": "shake",
         "description": "Shake head no to disagree or deny"
+    },
+    {
+        "type": "function",
+        "name": "look_at_camera",
+        "description": "Look through the camera to see what the user is showing. Use when user says 'look', 'what is this', 'can you see', 'show you something', etc. Returns description of what is seen with French translation.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "question": {
+                    "type": "string",
+                    "description": "What to look for or ask about the image (e.g., 'What object is this?', 'What does this text say?')"
+                }
+            }
+        }
     }
 ]
+
+# Store latest camera frame from browser
+latest_camera_frame: dict = {"frame": None, "timestamp": 0}
 
 
 # ==================== WEBSOCKET RELAY ====================
@@ -339,6 +384,10 @@ async def websocket_realtime(websocket: WebSocket):
 
                             result = await handle_tool_call(tool_name, arguments)
 
+                            # Cancel any active response before sending tool result
+                            await openai_ws.send(json.dumps({"type": "response.cancel"}))
+                            await asyncio.sleep(0.1)  # Brief pause for cancellation
+
                             # Send tool result back to OpenAI
                             await openai_ws.send(json.dumps({
                                 "type": "conversation.item.create",
@@ -358,10 +407,15 @@ async def websocket_realtime(websocket: WebSocket):
                             })
 
                         elif event_type == "error":
-                            await websocket.send_json({
-                                "type": "error",
-                                "message": data.get("error", {}).get("message", "Unknown error")
-                            })
+                            error_msg = data.get("error", {}).get("message", "Unknown error")
+                            # Filter out non-critical errors
+                            if "no active response" not in error_msg.lower():
+                                await websocket.send_json({
+                                    "type": "error",
+                                    "message": error_msg
+                                })
+                            else:
+                                print(f"Suppressed non-critical error: {error_msg}")
 
                 except Exception as e:
                     print(f"Relay error: {e}")
@@ -440,6 +494,27 @@ async def status():
         "reachy_daemon": daemon_status,
         "active_conversations": len(active_conversations)
     }
+
+
+class CameraFrame(BaseModel):
+    """Camera frame from browser"""
+    image: str  # Base64 encoded image
+
+
+@app.post("/api/camera/frame")
+async def receive_camera_frame(frame: CameraFrame):
+    """Receive camera frame from browser for vision analysis"""
+    import time
+    latest_camera_frame["frame"] = frame.image
+    latest_camera_frame["timestamp"] = time.time()
+    return {"status": "ok"}
+
+
+@app.post("/api/vision/analyze")
+async def analyze_vision(frame: CameraFrame):
+    """Directly analyze an image and return French teaching content"""
+    result = await describe_for_teaching(frame.image)
+    return {"description": result}
 
 
 @app.post("/api/behavior/{action}")
@@ -756,7 +831,32 @@ async def root():
             padding: 1rem;
             background: rgba(0,0,0,0.3);
             border-radius: 12px;
+            margin-bottom: 0.5rem;
+        }
+
+        .transcript-label {
+            font-size: 0.7rem;
+            color: var(--gold);
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .user-transcript {
+            height: 100px;
+            min-height: 100px;
+            max-height: 100px;
+            overflow-y: auto;
+            padding: 0.75rem;
+            background: rgba(0,35,149,0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(0,35,149,0.4);
             margin-bottom: 1rem;
+        }
+
+        .user-transcript .message.user {
+            margin-left: 0;
+            max-width: 100%;
         }
 
         .message {
@@ -878,6 +978,118 @@ async def root():
             border-color: var(--gold);
         }
 
+        /* Webcam Section */
+        .webcam-section {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .webcam-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .webcam-header span {
+            font-size: 0.85rem;
+            color: var(--gold);
+        }
+
+        .cam-toggle {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--gold);
+            border-radius: 15px;
+            background: transparent;
+            color: var(--gold);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cam-toggle:hover {
+            background: var(--gold);
+            color: var(--dark);
+        }
+
+        .cam-toggle.active {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .webcam-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+        }
+
+        .webcam-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .webcam-crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(212,175,55,0.5);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .webcam-crosshair::before,
+        .webcam-crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(212,175,55,0.5);
+        }
+
+        .webcam-crosshair::before {
+            width: 2px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .webcam-crosshair::after {
+            width: 20px;
+            height: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .webcam-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.7);
+            color: var(--gray);
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .webcam-overlay.hidden {
+            display: none;
+        }
+
         /* Connection Status */
         .connection-overlay {
             position: fixed;
@@ -982,6 +1194,22 @@ async def root():
                     </div>
                 </div>
 
+                <!-- Webcam for Vision -->
+                <div class="webcam-section">
+                    <div class="webcam-header">
+                        <span>📷 Show Me Objects!</span>
+                        <button class="cam-toggle" id="camToggle" onclick="toggleCamera()">Enable Camera</button>
+                    </div>
+                    <div class="webcam-container" id="webcamContainer">
+                        <video id="webcam" autoplay playsinline muted></video>
+                        <canvas id="webcamCanvas" style="display:none;"></canvas>
+                        <div class="webcam-crosshair" id="crosshair" style="display:none;"></div>
+                        <div class="webcam-overlay" id="webcamOverlay">
+                            <span>📷 Camera off<br>Click "Enable Camera" to let me see!<br><small>Center objects in the frame</small></span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="behavior-grid">
                     <button class="behavior-btn" onclick="triggerBehavior('wave')">Wave</button>
                     <button class="behavior-btn" onclick="triggerBehavior('nod')">Nod</button>
@@ -996,10 +1224,18 @@ async def root():
 
             <div class="panel conversation-panel">
                 <h2>Conversation</h2>
+                <div class="transcript-label">🤖 Le Professeur Says:</div>
                 <div class="transcript" id="transcript">
                     <div class="message assistant">
                         <div class="role">Le Professeur</div>
                         <div class="text">Bonjour! Je suis Le Professeur Bizarre. Click the button below and start speaking to me in English - I'll teach you French!</div>
+                    </div>
+                </div>
+
+                <div class="transcript-label">🎤 You Said:</div>
+                <div class="user-transcript" id="userTranscript">
+                    <div class="message user" style="opacity: 0.5;">
+                        <div class="text">Your speech will appear here...</div>
                     </div>
                 </div>
 
@@ -1034,6 +1270,7 @@ async def root():
         const aiDot = document.getElementById('aiDot');
         const aiStatus = document.getElementById('aiStatus');
         const transcript = document.getElementById('transcript');
+        const userTranscript = document.getElementById('userTranscript');
         const talkBtn = document.getElementById('talkBtn');
         const talkIcon = document.getElementById('talkIcon');
         const talkText = document.getElementById('talkText');
@@ -1279,14 +1516,23 @@ async def root():
         function addMessage(role, text) {
             const div = document.createElement('div');
             div.className = `message ${role}`;
-            div.innerHTML = `
-                <div class="role">${role === 'user' ? 'You' : 'Le Professeur'}</div>
-                <div class="text">${text}</div>
-            `;
-            transcript.appendChild(div);
-            transcript.scrollTop = transcript.scrollHeight;
 
-            if (role === 'assistant') {
+            if (role === 'user') {
+                // User messages go to the user transcript box
+                div.innerHTML = `<div class="text">${text}</div>`;
+                // Clear placeholder if it exists
+                const placeholder = userTranscript.querySelector('.message[style*="opacity"]');
+                if (placeholder) placeholder.remove();
+                userTranscript.appendChild(div);
+                userTranscript.scrollTop = userTranscript.scrollHeight;
+            } else {
+                // Assistant messages go to main transcript
+                div.innerHTML = `
+                    <div class="role">Le Professeur</div>
+                    <div class="text">${text}</div>
+                `;
+                transcript.appendChild(div);
+                transcript.scrollTop = transcript.scrollHeight;
                 lastAssistantMessage = div.querySelector('.text');
             }
         }
@@ -1361,6 +1607,121 @@ async def root():
 
         // Start state streaming immediately
         connectStateWebSocket();
+
+        // ==================== WEBCAM / VISION ====================
+        let cameraStream = null;
+        let cameraEnabled = false;
+        let frameInterval = null;
+
+        const webcam = document.getElementById('webcam');
+        const webcamCanvas = document.getElementById('webcamCanvas');
+        const webcamOverlay = document.getElementById('webcamOverlay');
+        const camToggle = document.getElementById('camToggle');
+
+        async function toggleCamera() {
+            if (cameraEnabled) {
+                stopCamera();
+            } else {
+                await startCamera();
+            }
+        }
+
+        async function startCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: 640, height: 480 }
+                });
+                webcam.srcObject = cameraStream;
+                webcamOverlay.classList.add('hidden');
+                document.getElementById('crosshair').style.display = 'block';
+                camToggle.textContent = '📷 Camera On';
+                camToggle.classList.add('active');
+                cameraEnabled = true;
+
+                // Start sending frames to server
+                startFrameCapture();
+            } catch (e) {
+                console.error('Camera error:', e);
+                alert('Could not access camera: ' + e.message);
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            webcam.srcObject = null;
+            webcamOverlay.classList.remove('hidden');
+            document.getElementById('crosshair').style.display = 'none';
+            camToggle.textContent = 'Enable Camera';
+            camToggle.classList.remove('active');
+            cameraEnabled = false;
+
+            if (frameInterval) {
+                clearInterval(frameInterval);
+                frameInterval = null;
+            }
+        }
+
+        function startFrameCapture() {
+            // Capture and send frame every 2 seconds
+            frameInterval = setInterval(() => {
+                if (!cameraEnabled) return;
+                captureAndSendFrame();
+            }, 2000);
+        }
+
+        function captureAndSendFrame() {
+            if (!webcam.videoWidth) return;
+
+            const ctx = webcamCanvas.getContext('2d');
+            webcamCanvas.width = 640;
+            webcamCanvas.height = 480;
+            ctx.drawImage(webcam, 0, 0, 640, 480);
+
+            // Convert to base64 JPEG
+            const base64 = webcamCanvas.toDataURL('image/jpeg', 0.7);
+
+            // Send to server
+            fetch('/api/camera/frame', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64 })
+            }).catch(e => console.log('Frame send error:', e));
+        }
+
+        // Capture frame on demand (for immediate analysis)
+        async function captureAndAnalyze() {
+            if (!cameraEnabled) {
+                alert('Please enable the camera first!');
+                return;
+            }
+
+            captureAndSendFrame();
+
+            // Wait a moment for frame to be received
+            await new Promise(r => setTimeout(r, 200));
+
+            // Request analysis
+            const ctx = webcamCanvas.getContext('2d');
+            webcamCanvas.width = 640;
+            webcamCanvas.height = 480;
+            ctx.drawImage(webcam, 0, 0, 640, 480);
+            const base64 = webcamCanvas.toDataURL('image/jpeg', 0.7);
+
+            try {
+                const response = await fetch('/api/vision/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 })
+                });
+                const data = await response.json();
+                addMessage('assistant', data.description);
+            } catch (e) {
+                console.error('Analysis error:', e);
+            }
+        }
     </script>
 </body>
 </html>
