@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Professeur Bizarre</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="flag-stripe france"></div>
+            <div class="flag-stripe white"></div>
+            <div class="flag-stripe usa"></div>
+            <h1 class="title">Le Professeur Bizarre</h1>
+            <p class="subtitle">Your Eccentric Franco-American Cultural Teacher</p>
+            <p class="powered-by">Powered by NVIDIA Nemotron</p>
+        </header>
+
+        <main class="main-content">
+            <section class="input-section">
+                <label for="english-input" class="input-label">
+                    <span class="flag">🇺🇸</span> Say something in English:
+                </label>
+                <div class="input-wrapper">
+                    <textarea
+                        id="english-input"
+                        class="text-input"
+                        placeholder="Type something like 'Hello, how are you?' or 'I love cheese'..."
+                        rows="3"
+                    ></textarea>
+                    <button id="translate-btn" class="translate-btn">
+                        <span class="btn-text">Translate</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                </div>
+                <div class="quick-phrases">
+                    <span class="quick-label">Quick phrases:</span>
+                    <button class="quick-btn" data-phrase="Hello, how are you?">Hello!</button>
+                    <button class="quick-btn" data-phrase="I love cheese">I love cheese</button>
+                    <button class="quick-btn" data-phrase="Where is the bathroom?">Bathroom?</button>
+                    <button class="quick-btn" data-phrase="This wine is excellent">Wine!</button>
+                    <button class="quick-btn" data-phrase="The check please">The check</button>
+                </div>
+            </section>
+
+            <section id="response-section" class="response-section hidden">
+                <div class="response-card translation-card">
+                    <div class="card-header">
+                        <span class="flag">🇫🇷</span>
+                        <h3>French Translation</h3>
+                    </div>
+                    <p id="french-translation" class="translation-text"></p>
+                    <p id="pronunciation-tip" class="pronunciation-tip hidden"></p>
+                </div>
+
+                <div class="response-card fact-card">
+                    <div class="card-header">
+                        <span class="icon">💡</span>
+                        <h3>Bizarre Cultural Fact</h3>
+                    </div>
+                    <p id="cultural-fact" class="fact-text"></p>
+                </div>
+            </section>
+
+            <section id="loading-section" class="loading-section hidden">
+                <div class="robot-animation">
+                    <div class="robot-head">
+                        <div class="antenna left"></div>
+                        <div class="antenna right"></div>
+                        <div class="face">
+                            <div class="eye left"></div>
+                            <div class="eye right"></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="loading-text">Le Professeur is thinking...</p>
+                <p class="loading-subtext">Searching for bizarre facts...</p>
+            </section>
+
+            <section id="error-section" class="error-section hidden">
+                <p class="error-text">Mon Dieu! Something went wrong.</p>
+                <p id="error-message" class="error-message"></p>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Built for the Reachy Mini App Contest 2025</p>
+            <p class="footer-links">
+                <a href="https://huggingface.co/spaces/pollen-robotics/reachy-mini-app-store" target="_blank">Reachy Mini Apps</a>
+                •
+                <a href="https://openrouter.ai/nvidia" target="_blank">NVIDIA Nemotron</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
