@@ -558,99 +558,124 @@ async def root():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Le Professeur Bizarre - Real-time Conversation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Le Professeur Bizarre</title>
     <style>
         :root {
-            --france-blue: #002395;
-            --france-red: #ED2939;
-            --france-white: #FFFFFF;
-            --gold: #D4AF37;
-            --cream: #FDF8F0;
-            --dark: #1a1a2e;
-            --gray: #6b7280;
-            --success: #10B981;
+            --bg-color: #F5F5F7;
+            --card-bg: #FFFFFF;
+            --apple-blue: #0071E3;
+            --apple-blue-hover: #0077ED;
+            --text-primary: #1D1D1F;
+            --text-secondary: #86868B;
+            --bubble-user: #0071E3;
+            --bubble-robot: #E9E9EB;
+            --radius-l: 24px;
+            --radius-m: 16px;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --shadow-inner: inset 0 0 0 1px rgba(0,0,0,0.05);
+            --success: #30D158;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, var(--dark) 0%, #252542 100%);
-            min-height: 100vh;
-            color: white;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1.5rem;
-        }
-
+        /* HEADER */
         header {
             text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            background: linear-gradient(135deg, var(--france-blue), var(--france-white), var(--france-red));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        header .subtitle {
-            color: var(--gold);
-            font-size: 1rem;
-            margin-top: 0.5rem;
-        }
-
-        .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .panel {
-            background: rgba(255,255,255,0.05);
+            padding: 24px 20px;
+            flex-shrink: 0;
+            background: rgba(245, 245, 247, 0.8);
             backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 10;
         }
 
-        .panel h2 {
-            font-size: 0.9rem;
-            color: var(--gold);
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 4px;
         }
 
-        /* Robot Visualization */
-        .robot-stage {
-            background: linear-gradient(180deg, #0a0a15 0%, #1a1a2e 100%);
-            border-radius: 16px;
-            height: 350px;
+        .subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* MAIN LAYOUT */
+        main {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 24px;
+            max-width: 1600px;
+            width: 96%;
+            margin: 0 auto 24px auto;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        /* LEFT COLUMN (VISUALS) */
+        .visual-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Robot Viewport - The Hero Element */
+        .robot-viewport {
+            background: #000;
+            border-radius: var(--radius-l);
             position: relative;
             overflow: hidden;
-            perspective: 800px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            min-height: 400px;
         }
 
-        .stage-grid {
+        /* 3D Environment Simulation */
+        .grid-floor {
             position: absolute;
             bottom: 0;
-            left: 0;
-            right: 0;
-            height: 120px;
-            background:
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            width: 100%;
+            height: 40%;
+            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 100%);
             background-size: 40px 40px;
-            transform: rotateX(60deg);
+            background-image:
+                linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+            transform: perspective(500px) rotateX(60deg);
             transform-origin: bottom;
+            opacity: 0.3;
+        }
+
+        /* Robot Animation */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes blink {
+            0%, 96%, 100% { height: 16px; }
+            98% { height: 2px; }
         }
 
         .robot-container {
@@ -659,6 +684,7 @@ async def root():
             left: 50%;
             transform: translate(-50%, -50%);
             transform-style: preserve-3d;
+            animation: float 4s ease-in-out infinite;
         }
 
         .robot-body {
@@ -692,6 +718,7 @@ async def root():
             position: absolute;
             top: -70px;
             left: 50%;
+            transform: translateX(-50%);
             transform-origin: center bottom;
             box-shadow:
                 inset -4px -4px 15px rgba(0,0,0,0.12),
@@ -730,6 +757,7 @@ async def root():
                 inset 2px 2px 5px rgba(255,255,255,0.3),
                 0 3px 6px rgba(0,0,0,0.3);
             position: relative;
+            animation: blink 4s infinite;
         }
 
         .robot-eye::after {
@@ -765,9 +793,9 @@ async def root():
             transform: translateX(-50%);
             width: 16px;
             height: 16px;
-            background: radial-gradient(circle at 30% 30%, var(--gold) 0%, #b8960a 100%);
+            background: radial-gradient(circle at 30% 30%, #0071E3 0%, #005BB5 100%);
             border-radius: 50%;
-            box-shadow: 0 0 15px rgba(212,175,55,0.6);
+            box-shadow: 0 0 15px rgba(0,113,227,0.6);
         }
 
         .robot-base {
@@ -782,88 +810,206 @@ async def root():
             box-shadow: 0 8px 20px rgba(0,0,0,0.5);
         }
 
-        /* Status */
-        .status-bar {
+        /* Status Pills */
+        .status-pill-container {
             position: absolute;
-            bottom: 12px;
-            left: 12px;
-            right: 12px;
+            bottom: 24px;
+            left: 24px;
+            right: 24px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            z-index: 5;
         }
 
-        .status-indicator {
+        .status-pill {
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: white;
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 14px;
-            background: rgba(0,0,0,0.6);
-            border-radius: 20px;
-            font-size: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .status-dot {
-            width: 10px;
-            height: 10px;
+        .dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: #ef4444;
         }
-
-        .status-dot.connected { background: var(--success); animation: pulse 2s infinite; }
-        .status-dot.speaking { background: var(--france-red); animation: pulse 0.3s infinite; }
+        .dot.green { background-color: #30D158; box-shadow: 0 0 10px #30D158; }
+        .dot.connected { background-color: #30D158; box-shadow: 0 0 10px #30D158; }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
 
-        /* Conversation Panel */
-        .conversation-panel {
+        .section-title {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .btn-text {
+            color: var(--apple-blue);
+            background: none;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-text.active {
+            color: var(--success);
+        }
+
+        /* Behavior Grid */
+        .behavior-section {
+            background: var(--card-bg);
+            border-radius: var(--radius-l);
+            padding: 16px 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .behavior-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .behavior-btn {
+            padding: 10px 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
+            background: #F2F2F7;
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .behavior-btn:hover {
+            background: var(--apple-blue);
+            color: white;
+            border-color: var(--apple-blue);
+        }
+
+        /* RIGHT COLUMN (CHAT) */
+        .chat-column {
+            background: var(--card-bg);
+            border-radius: var(--radius-l);
+            box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            height: 500px;
+            overflow: hidden;
+            height: 100%;
+            border: 1px solid rgba(0,0,0,0.02);
         }
 
-        .transcript {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            background: rgba(0,0,0,0.3);
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #E5E5EA;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Camera in Chat */
+        .camera-in-chat {
+            padding: 12px 16px;
+            border-bottom: 1px solid #E5E5EA;
+            background: #FAFAFA;
+        }
+
+        .camera-in-chat .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0;
+            margin-bottom: 8px;
+            border: none;
+            background: none;
+        }
+
+        .camera-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .camera-preview {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            background: #000;
             border-radius: 12px;
-            margin-bottom: 0.5rem;
+            overflow: hidden;
         }
 
-        .transcript-label {
-            font-size: 0.7rem;
-            color: var(--gold);
-            margin-bottom: 0.3rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .camera-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .user-transcript {
-            height: 100px;
-            min-height: 100px;
-            max-height: 100px;
+        .camera-preview canvas {
+            display: none;
+        }
+
+        .camera-preview .webcam-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+            color: #666;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .camera-preview .webcam-overlay.hidden {
+            display: none;
+        }
+
+        .camera-preview .webcam-crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 2px solid rgba(0,113,227,0.6);
+            border-radius: 50%;
+            display: none;
+        }
+
+        .chat-area {
+            flex-grow: 1;
+            padding: 20px;
             overflow-y: auto;
-            padding: 0.75rem;
-            background: rgba(0,35,149,0.2);
-            border-radius: 12px;
-            border: 1px solid rgba(0,35,149,0.4);
-            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        .user-transcript .message.user {
-            margin-left: 0;
-            max-width: 100%;
-        }
-
+        /* Messages */
         .message {
-            margin-bottom: 1rem;
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
             max-width: 85%;
+            padding: 12px 18px;
+            font-size: 16px;
+            line-height: 1.4;
+            position: relative;
             animation: fadeIn 0.3s ease;
         }
 
@@ -872,80 +1018,67 @@ async def root():
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .message.user {
-            background: var(--france-blue);
-            margin-left: auto;
-            border-bottom-right-radius: 4px;
+        .message-robot {
+            align-self: flex-start;
+            background-color: var(--bubble-robot);
+            color: #000;
+            border-radius: 20px 20px 20px 4px;
         }
 
-        .message.assistant {
-            background: linear-gradient(135deg, var(--france-red), #c41e30);
-            margin-right: auto;
-            border-bottom-left-radius: 4px;
+        .message-user {
+            align-self: flex-end;
+            background-color: var(--bubble-user);
+            color: white;
+            border-radius: 20px 20px 4px 20px;
+            box-shadow: 0 2px 10px rgba(0, 113, 227, 0.2);
         }
 
-        .message .role {
-            font-size: 0.7rem;
-            opacity: 0.7;
-            margin-bottom: 0.25rem;
-        }
-
-        .message .text {
-            font-size: 0.95rem;
-            line-height: 1.4;
+        .message-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            margin-left: 4px;
+            font-weight: 500;
         }
 
         .tool-call {
-            background: rgba(212,175,55,0.2);
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            padding: 0.5rem 0.75rem;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            margin: 0.5rem 0;
+            background: rgba(0,113,227,0.1);
+            border: 1px solid var(--apple-blue);
+            color: var(--apple-blue);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin: 8px 0;
         }
 
-        /* Controls */
-        .controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
+        /* Input Area */
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #E5E5EA;
+            background: #FFFFFF;
         }
 
         .talk-btn {
-            flex: 1;
-            padding: 1.25rem;
+            width: 100%;
+            padding: 18px;
+            background: var(--apple-blue);
+            color: white;
             border: none;
             border-radius: 50px;
-            font-size: 1.1rem;
+            font-size: 17px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
-        }
-
-        .talk-btn.inactive {
-            background: linear-gradient(135deg, var(--france-blue), #3355AA);
-            color: white;
-        }
-
-        .talk-btn.listening {
-            background: linear-gradient(135deg, var(--france-red), #c41e30);
-            color: white;
-            animation: pulse-btn 1s infinite;
-        }
-
-        @keyframes pulse-btn {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+            gap: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
         }
 
         .talk-btn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.1);
+            background-color: var(--apple-blue-hover);
+            transform: translateY(-1px);
         }
 
         .talk-btn:disabled {
@@ -954,150 +1087,32 @@ async def root():
             transform: none;
         }
 
-        /* Behavior Buttons */
-        .behavior-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
-            margin-top: 1rem;
+        .talk-btn.listening {
+            background: #FF3B30;
+            box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
+            animation: pulse-btn 1s infinite;
         }
 
-        .behavior-btn {
-            padding: 0.6rem;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            background: rgba(255,255,255,0.05);
-            color: white;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
+        @keyframes pulse-btn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
         }
 
-        .behavior-btn:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: var(--gold);
+        .talk-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
         }
 
-        /* Webcam Section */
-        .webcam-section {
-            margin-top: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .webcam-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .webcam-header span {
-            font-size: 0.85rem;
-            color: var(--gold);
-        }
-
-        .cam-toggle {
-            padding: 0.4rem 0.8rem;
-            border: 1px solid var(--gold);
-            border-radius: 15px;
-            background: transparent;
-            color: var(--gold);
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .cam-toggle:hover {
-            background: var(--gold);
-            color: var(--dark);
-        }
-
-        .cam-toggle.active {
-            background: var(--success);
-            border-color: var(--success);
-            color: white;
-        }
-
-        .webcam-container {
-            position: relative;
-            width: 100%;
-            height: 280px;
-            background: rgba(0,0,0,0.4);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 2px solid var(--gold);
-        }
-
-        .webcam-container video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #000;
-        }
-
-        .webcam-crosshair {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            border: 2px solid rgba(212,175,55,0.5);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .webcam-crosshair::before,
-        .webcam-crosshair::after {
-            content: '';
-            position: absolute;
-            background: rgba(212,175,55,0.5);
-        }
-
-        .webcam-crosshair::before {
-            width: 2px;
-            height: 20px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .webcam-crosshair::after {
-            width: 20px;
-            height: 2px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .webcam-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,0.7);
-            color: var(--gray);
-            font-size: 0.8rem;
-            text-align: center;
-            padding: 1rem;
-        }
-
-        .webcam-overlay.hidden {
-            display: none;
-        }
-
-        /* Connection Status */
+        /* Connection Overlay */
         .connection-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.9);
+            background: rgba(245, 245, 247, 0.95);
+            backdrop-filter: blur(20px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1108,108 +1123,109 @@ async def root():
 
         .connection-box {
             text-align: center;
-            padding: 3rem;
+            padding: 48px;
+            background: white;
+            border-radius: var(--radius-l);
+            box-shadow: var(--shadow);
+            max-width: 400px;
         }
 
         .connection-box h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            margin-bottom: 1rem;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
         }
 
         .connection-box p {
-            color: var(--gray);
-            margin-bottom: 2rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            line-height: 1.5;
         }
 
         .connect-btn {
-            padding: 1rem 2.5rem;
-            background: linear-gradient(135deg, var(--france-blue), var(--france-red));
+            padding: 16px 48px;
+            background: var(--apple-blue);
             border: none;
-            border-radius: 30px;
+            border-radius: 50px;
             color: white;
-            font-size: 1.1rem;
+            font-size: 17px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
         }
 
         .connect-btn:hover {
-            transform: scale(1.05);
-            filter: brightness(1.1);
+            background: var(--apple-blue-hover);
+            transform: translateY(-2px);
         }
 
+        /* Responsive */
         @media (max-width: 900px) {
-            .main-layout {
+            main {
                 grid-template-columns: 1fr;
+                overflow-y: auto;
             }
-            .robot-stage { height: 280px; }
+            .robot-viewport {
+                height: 350px;
+                flex-grow: 0;
+            }
         }
     </style>
 </head>
 <body>
+
     <div class="connection-overlay" id="connectionOverlay">
         <div class="connection-box">
-            <h2>Bonjour! Ready to chat?</h2>
-            <p>Click below to start a real-time conversation with Le Professeur Bizarre.<br>
-            Make sure to allow microphone access!</p>
+            <h2>Bonjour!</h2>
+            <p>Ready to learn French with Le Professeur Bizarre?<br>Make sure to allow microphone access.</p>
             <button class="connect-btn" onclick="startConversation()">Start Conversation</button>
         </div>
     </div>
 
-    <div class="container">
-        <header>
-            <h1>Le Professeur Bizarre</h1>
-            <p class="subtitle">Real-time French Conversation with Reachy Mini</p>
-        </header>
+    <header>
+        <h1>Le Professeur Bizarre</h1>
+        <div class="subtitle">Real-time French Conversation with Reachy Mini</div>
+    </header>
 
-        <div class="main-layout">
-            <div class="panel">
-                <h2>Reachy Mini - Live</h2>
-                <div class="robot-stage">
-                    <div class="stage-grid"></div>
-                    <div class="robot-container">
-                        <div class="robot-body">
-                            <div class="robot-neck"></div>
-                            <div class="robot-head" id="robotHead">
-                                <div class="robot-antenna left" id="antennaLeft"></div>
-                                <div class="robot-antenna right" id="antennaRight"></div>
-                                <div class="robot-face">
-                                    <div class="robot-eye"></div>
-                                    <div class="robot-eye"></div>
-                                </div>
+    <main>
+        <!-- Left Column: Visuals -->
+        <section class="visual-column">
+
+            <!-- Robot View -->
+            <div class="robot-viewport">
+                <div class="grid-floor"></div>
+
+                <div class="robot-container">
+                    <div class="robot-body">
+                        <div class="robot-neck"></div>
+                        <div class="robot-head" id="robotHead">
+                            <div class="robot-antenna left" id="antennaLeft"></div>
+                            <div class="robot-antenna right" id="antennaRight"></div>
+                            <div class="robot-face">
+                                <div class="robot-eye"></div>
+                                <div class="robot-eye"></div>
                             </div>
-                            <div class="robot-base"></div>
                         </div>
-                    </div>
-                    <div class="status-bar">
-                        <div class="status-indicator">
-                            <div class="status-dot" id="daemonDot"></div>
-                            <span id="daemonStatus">Connecting...</span>
-                        </div>
-                        <div class="status-indicator">
-                            <div class="status-dot" id="aiDot"></div>
-                            <span id="aiStatus">Disconnected</span>
-                        </div>
+                        <div class="robot-base"></div>
                     </div>
                 </div>
 
-                <!-- Webcam for Vision -->
-                <div class="webcam-section">
-                    <div class="webcam-header">
-                        <span>📷 Show Me Objects!</span>
-                        <button class="cam-toggle" id="camToggle" onclick="toggleCamera()">Enable Camera</button>
+                <div class="status-pill-container">
+                    <div class="status-pill">
+                        <span class="dot" id="daemonDot"></span>
+                        <span id="daemonStatus">Connecting...</span>
                     </div>
-                    <div class="webcam-container" id="webcamContainer">
-                        <video id="webcam" autoplay playsinline muted></video>
-                        <canvas id="webcamCanvas" style="display:none;"></canvas>
-                        <div class="webcam-crosshair" id="crosshair" style="display:none;"></div>
-                        <div class="webcam-overlay" id="webcamOverlay">
-                            <span>📷 Camera off<br>Click "Enable Camera" to let me see!<br><small>Center objects in the frame</small></span>
-                        </div>
+                    <div class="status-pill">
+                        <span class="dot" id="aiDot"></span>
+                        <span id="aiStatus">Disconnected</span>
                     </div>
                 </div>
+            </div>
 
+            <!-- Behavior Buttons -->
+            <div class="behavior-section">
+                <div class="section-title">Robot Actions</div>
                 <div class="behavior-grid">
                     <button class="behavior-btn" onclick="triggerBehavior('wave')">Wave</button>
                     <button class="behavior-btn" onclick="triggerBehavior('nod')">Nod</button>
@@ -1222,32 +1238,54 @@ async def root():
                 </div>
             </div>
 
-            <div class="panel conversation-panel">
-                <h2>Conversation</h2>
-                <div class="transcript-label">🤖 Le Professeur Says:</div>
-                <div class="transcript" id="transcript">
-                    <div class="message assistant">
-                        <div class="role">Le Professeur</div>
-                        <div class="text">Bonjour! Je suis Le Professeur Bizarre. Click the button below and start speaking to me in English - I'll teach you French!</div>
-                    </div>
-                </div>
+        </section>
 
-                <div class="transcript-label">🎤 You Said:</div>
-                <div class="user-transcript" id="userTranscript">
-                    <div class="message user" style="opacity: 0.5;">
-                        <div class="text">Your speech will appear here...</div>
-                    </div>
-                </div>
+        <!-- Right Column: Conversation -->
+        <section class="chat-column">
+            <div class="chat-header">
+                <div class="section-title">Conversation</div>
+            </div>
 
-                <div class="controls">
-                    <button class="talk-btn inactive" id="talkBtn" onclick="toggleTalking()" disabled>
-                        <span id="talkIcon">🎤</span>
-                        <span id="talkText">Click to Talk</span>
-                    </button>
+            <!-- Camera at top of chat -->
+            <div class="camera-in-chat">
+                <div class="camera-header">
+                    <span class="camera-label">Show me objects!</span>
+                    <button class="btn-text" id="camToggle" onclick="toggleCamera()">Enable Camera</button>
+                </div>
+                <div class="camera-preview">
+                    <video id="webcam" autoplay playsinline muted></video>
+                    <canvas id="webcamCanvas"></canvas>
+                    <div class="webcam-crosshair" id="crosshair"></div>
+                    <div class="webcam-overlay" id="webcamOverlay">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                        <span>Camera off</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+
+            <div class="chat-area" id="transcript">
+                <div style="align-self: flex-start; width: 100%;">
+                    <div class="message-label">Le Professeur</div>
+                    <div class="message message-robot">
+                        Bonjour! Je suis Le Professeur Bizarre. Click the button below and start speaking to me in English - I'll teach you French!
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <button class="talk-btn" id="talkBtn" onclick="toggleTalking()" disabled>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                    <span id="talkText">Click to Talk</span>
+                </button>
+            </div>
+        </section>
+    </main>
 
     <script>
         // ==================== STATE ====================
@@ -1255,12 +1293,8 @@ async def root():
         let stateWs = null;
         let audioContext = null;
         let mediaStream = null;
-        let mediaRecorder = null;
         let isListening = false;
-        let isAISpeaking = false;  // Track when AI is outputting audio
-        let audioQueue = [];
-        let isPlaying = false;
-        let inputPaused = false;  // Pause input while AI speaks
+        let isAISpeaking = false;
 
         const robotHead = document.getElementById('robotHead');
         const antennaLeft = document.getElementById('antennaLeft');
@@ -1270,9 +1304,7 @@ async def root():
         const aiDot = document.getElementById('aiDot');
         const aiStatus = document.getElementById('aiStatus');
         const transcript = document.getElementById('transcript');
-        const userTranscript = document.getElementById('userTranscript');
         const talkBtn = document.getElementById('talkBtn');
-        const talkIcon = document.getElementById('talkIcon');
         const talkText = document.getElementById('talkText');
 
         // ==================== ROBOT VISUALIZATION ====================
@@ -1349,32 +1381,20 @@ async def root():
         function startRecording() {
             if (!mediaStream) return;
 
-            const audioTracks = mediaStream.getAudioTracks();
-            if (audioTracks.length === 0) return;
-
-            // Use AudioWorklet or ScriptProcessor for raw PCM
             const source = audioContext.createMediaStreamSource(mediaStream);
             const processor = audioContext.createScriptProcessor(4096, 1, 1);
 
             processor.onaudioprocess = (e) => {
-                // Don't send audio if AI is speaking (prevents feedback loop)
                 if (!isListening || !ws || ws.readyState !== WebSocket.OPEN || isAISpeaking) return;
 
                 const inputData = e.inputBuffer.getChannelData(0);
-
-                // Convert to 16-bit PCM
                 const pcm16 = new Int16Array(inputData.length);
                 for (let i = 0; i < inputData.length; i++) {
                     pcm16[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32768));
                 }
 
-                // Convert to base64
                 const base64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
-
-                ws.send(JSON.stringify({
-                    type: 'audio',
-                    audio: base64
-                }));
+                ws.send(JSON.stringify({ type: 'audio', audio: base64 }));
             };
 
             source.connect(processor);
@@ -1397,14 +1417,8 @@ async def root():
 
         async function playAudio(base64Audio) {
             if (!audioContext) return;
-
-            // Add to queue
             playbackQueue.push(base64Audio);
-
-            // If not already playing, start processing queue
-            if (!currentlyPlaying) {
-                processAudioQueue();
-            }
+            if (!currentlyPlaying) processAudioQueue();
         }
 
         async function processAudioQueue() {
@@ -1415,11 +1429,9 @@ async def root():
             }
 
             currentlyPlaying = true;
-            isAISpeaking = true;  // Mute input while playing
+            isAISpeaking = true;
 
             const base64Audio = playbackQueue.shift();
-
-            // Decode base64 to PCM16
             const binaryString = atob(base64Audio);
             const bytes = new Uint8Array(binaryString.length);
             for (let i = 0; i < binaryString.length; i++) {
@@ -1427,27 +1439,18 @@ async def root():
             }
 
             const pcm16 = new Int16Array(bytes.buffer);
-
-            // Convert to float32
             const float32 = new Float32Array(pcm16.length);
             for (let i = 0; i < pcm16.length; i++) {
                 float32[i] = pcm16[i] / 32768;
             }
 
-            // Create audio buffer
             const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
             audioBuffer.getChannelData(0).set(float32);
 
-            // Play
             const source = audioContext.createBufferSource();
             source.buffer = audioBuffer;
             source.connect(audioContext.destination);
-
-            source.onended = () => {
-                // Process next in queue
-                processAudioQueue();
-            };
-
+            source.onended = () => processAudioQueue();
             source.start();
         }
 
@@ -1469,7 +1472,6 @@ async def root():
                     addMessage('assistant', data.message);
                 }
                 else if (data.type === 'audio_start') {
-                    // New response starting - clear any old audio
                     playbackQueue = [];
                     isAISpeaking = true;
                 }
@@ -1490,11 +1492,8 @@ async def root():
                     addMessage('assistant', 'Error: ' + data.message);
                 }
                 else if (data.type === 'audio_done') {
-                    // AI finished speaking - wait then allow input again
                     setTimeout(() => {
-                        if (playbackQueue.length === 0) {
-                            isAISpeaking = false;
-                        }
+                        if (playbackQueue.length === 0) isAISpeaking = false;
                     }, 300);
                 }
             };
@@ -1505,36 +1504,33 @@ async def root():
                 talkBtn.disabled = true;
             };
 
-            ws.onerror = (e) => {
-                console.error('WebSocket error:', e);
-            };
+            ws.onerror = (e) => console.error('WebSocket error:', e);
         }
 
         // ==================== UI ====================
         let lastAssistantMessage = null;
 
         function addMessage(role, text) {
-            const div = document.createElement('div');
-            div.className = `message ${role}`;
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = role === 'user'
+                ? 'align-self: flex-end; width: 100%; display: flex; flex-direction: column; align-items: flex-end;'
+                : 'align-self: flex-start; width: 100%;';
 
-            if (role === 'user') {
-                // User messages go to the user transcript box
-                div.innerHTML = `<div class="text">${text}</div>`;
-                // Clear placeholder if it exists
-                const placeholder = userTranscript.querySelector('.message[style*="opacity"]');
-                if (placeholder) placeholder.remove();
-                userTranscript.appendChild(div);
-                userTranscript.scrollTop = userTranscript.scrollHeight;
-            } else {
-                // Assistant messages go to main transcript
-                div.innerHTML = `
-                    <div class="role">Le Professeur</div>
-                    <div class="text">${text}</div>
-                `;
-                transcript.appendChild(div);
-                transcript.scrollTop = transcript.scrollHeight;
-                lastAssistantMessage = div.querySelector('.text');
-            }
+            const label = document.createElement('div');
+            label.className = 'message-label';
+            label.style.marginRight = role === 'user' ? '4px' : '0';
+            label.textContent = role === 'user' ? 'You' : 'Le Professeur';
+
+            const msg = document.createElement('div');
+            msg.className = `message ${role === 'user' ? 'message-user' : 'message-robot'}`;
+            msg.textContent = text;
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(msg);
+            transcript.appendChild(wrapper);
+            transcript.scrollTop = transcript.scrollHeight;
+
+            if (role === 'assistant') lastAssistantMessage = msg;
         }
 
         function appendToLastMessage(delta) {
@@ -1569,11 +1565,8 @@ async def root():
             }
 
             isListening = true;
-            talkBtn.classList.remove('inactive');
             talkBtn.classList.add('listening');
-            talkIcon.textContent = '🔴';
             talkText.textContent = 'Listening...';
-
             startRecording();
             lastAssistantMessage = null;
         }
@@ -1581,16 +1574,12 @@ async def root():
         function stopTalking() {
             isListening = false;
             talkBtn.classList.remove('listening');
-            talkBtn.classList.add('inactive');
-            talkIcon.textContent = '🎤';
             talkText.textContent = 'Click to Talk';
-
             stopRecording();
         }
 
         async function startConversation() {
             const overlay = document.getElementById('connectionOverlay');
-
             if (await initAudio()) {
                 overlay.classList.add('hidden');
                 connectRealtimeWebSocket();
@@ -1617,6 +1606,7 @@ async def root():
         const webcamCanvas = document.getElementById('webcamCanvas');
         const webcamOverlay = document.getElementById('webcamOverlay');
         const camToggle = document.getElementById('camToggle');
+        const crosshair = document.getElementById('crosshair');
 
         async function toggleCamera() {
             if (cameraEnabled) {
@@ -1633,12 +1623,10 @@ async def root():
                 });
                 webcam.srcObject = cameraStream;
                 webcamOverlay.classList.add('hidden');
-                document.getElementById('crosshair').style.display = 'block';
-                camToggle.textContent = '📷 Camera On';
+                crosshair.style.display = 'block';
+                camToggle.textContent = 'Camera On';
                 camToggle.classList.add('active');
                 cameraEnabled = true;
-
-                // Start sending frames to server
                 startFrameCapture();
             } catch (e) {
                 console.error('Camera error:', e);
@@ -1653,7 +1641,7 @@ async def root():
             }
             webcam.srcObject = null;
             webcamOverlay.classList.remove('hidden');
-            document.getElementById('crosshair').style.display = 'none';
+            crosshair.style.display = 'none';
             camToggle.textContent = 'Enable Camera';
             camToggle.classList.remove('active');
             cameraEnabled = false;
@@ -1665,7 +1653,6 @@ async def root():
         }
 
         function startFrameCapture() {
-            // Capture and send frame every 2 seconds
             frameInterval = setInterval(() => {
                 if (!cameraEnabled) return;
                 captureAndSendFrame();
@@ -1680,47 +1667,12 @@ async def root():
             webcamCanvas.height = 480;
             ctx.drawImage(webcam, 0, 0, 640, 480);
 
-            // Convert to base64 JPEG
             const base64 = webcamCanvas.toDataURL('image/jpeg', 0.7);
-
-            // Send to server
             fetch('/api/camera/frame', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: base64 })
             }).catch(e => console.log('Frame send error:', e));
-        }
-
-        // Capture frame on demand (for immediate analysis)
-        async function captureAndAnalyze() {
-            if (!cameraEnabled) {
-                alert('Please enable the camera first!');
-                return;
-            }
-
-            captureAndSendFrame();
-
-            // Wait a moment for frame to be received
-            await new Promise(r => setTimeout(r, 200));
-
-            // Request analysis
-            const ctx = webcamCanvas.getContext('2d');
-            webcamCanvas.width = 640;
-            webcamCanvas.height = 480;
-            ctx.drawImage(webcam, 0, 0, 640, 480);
-            const base64 = webcamCanvas.toDataURL('image/jpeg', 0.7);
-
-            try {
-                const response = await fetch('/api/vision/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: base64 })
-                });
-                const data = await response.json();
-                addMessage('assistant', data.description);
-            } catch (e) {
-                console.error('Analysis error:', e);
-            }
         }
     </script>
 </body>

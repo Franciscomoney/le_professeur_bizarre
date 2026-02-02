@@ -4,24 +4,27 @@
 
 **Le Professeur Bizarre** transforms your Reachy Mini into an eccentric French language teacher with real-time voice conversation, computer vision, expressive animations, and rich behaviors.
 
+## Live Demo
+
+**Try it now:** [https://professeur.experiment.franciscocordobaotalora.com](https://professeur.experiment.franciscocordobaotalora.com)
+
 ## Features
 
 ### 🎙️ Real-time Voice Conversation
 - **OpenAI Realtime API** for natural back-and-forth voice chat
-- **Live transcription** of both user and AI speech
+- **Live transcription** displayed as iMessage-style chat bubbles
 - **Echo cancellation** - mutes input while AI speaks
-- **Separate transcript boxes** - See your speech and Reachy's responses clearly
 - Speak English, learn French naturally!
 
-### 👁️ Computer Vision (NEW!)
+### 👁️ Computer Vision
 - **NVIDIA Nemotron VL** for object recognition
-- **Show objects to the camera** - Reachy will teach you the French word!
+- **Camera preview in chat** - Show objects and see the camera feed right above the conversation
 - **Real-time webcam feed** with targeting crosshair
 - Just say "What is this?" or "Look at this" while holding an object
 
 ### 🤖 Expressive Robot Behaviors
-- **Breathing animation** - Subtle idle movement when not speaking
-- **Speech wobble** - Head and antenna movements while talking
+- **Floating animation** - Subtle idle movement with blinking eyes
+- **Speech animation** - Visual feedback while talking
 - **Emotions** - Happy, sad, surprised, thinking, excited, confused, proud
 - **Dances** - French waltz, celebration, thinking groove, bonjour bob
 - **Gestures** - Wave, nod yes, shake no
@@ -34,10 +37,12 @@ The AI naturally triggers robot behaviors during conversation:
 - Shows "thinking" emotion while analyzing images
 - Expresses confusion at American customs
 
-### 📺 Live Visualization
-- Real-time 3D robot view in browser
-- WebSocket streaming at 20 FPS
-- See every head tilt and antenna wiggle
+### 🎨 Modern Apple-Style UI
+- Clean, minimal design with light theme
+- 3D robot visualization with metallic shading
+- iMessage-style chat bubbles (blue for user, gray for robot)
+- Camera integrated at top of chat panel
+- Responsive layout for all screen sizes
 
 ## Quick Start
 
