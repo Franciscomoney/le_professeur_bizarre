@@ -946,7 +946,7 @@ async def root():
         .camera-preview {
             position: relative;
             width: 100%;
-            height: 120px;
+            height: 200px;
             background: #000;
             border-radius: 12px;
             overflow: hidden;
@@ -955,7 +955,7 @@ async def root():
         .camera-preview video {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
         }
 
         .camera-preview canvas {
